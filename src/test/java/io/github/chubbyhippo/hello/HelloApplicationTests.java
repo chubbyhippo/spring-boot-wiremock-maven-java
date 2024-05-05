@@ -5,9 +5,12 @@ import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.platform.commons.util.ReflectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.reactive.server.WebTestClient;
+
+import java.lang.reflect.Field;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -31,6 +34,25 @@ class HelloApplicationTests {
     void shouldGetHelloUsingSetterInjection(@Autowired HelloController controller) {
         wm.stubFor(get("/hello").willReturn(aResponse().withBody("hello")));
         controller.setUrl(wm.getRuntimeInfo().getHttpBaseUrl() + "/hello");
+
+        webTestClient.get()
+                .uri("/hello")
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody(String.class)
+                .isEqualTo("hello");
+    }
+
+    @Test
+    @DisplayName("should get hello using reflection")
+    void shouldGetHelloUsingReflection(@Autowired HelloController controller) throws NoSuchFieldException, IllegalAccessException {
+        wm.stubFor(get("/hello").willReturn(aResponse().withBody("hello")));
+        controller.setUrl(wm.getRuntimeInfo().getHttpBaseUrl() + "/hello");
+
+        Field url = controller.getClass().getDeclaredField("url");
+        ReflectionUtils.makeAccessible(url);
+        url.set(controller, wm.getRuntimeInfo().getHttpBaseUrl() + "/hello");
 
         webTestClient.get()
                 .uri("/hello")
