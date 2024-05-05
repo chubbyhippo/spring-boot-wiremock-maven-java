@@ -10,8 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
-import java.lang.reflect.Field;
-
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
@@ -50,7 +48,7 @@ class HelloApplicationTests {
         wm.stubFor(get("/hello").willReturn(aResponse().withBody("hello")));
         controller.setUrl(wm.getRuntimeInfo().getHttpBaseUrl() + "/hello");
 
-        Field url = controller.getClass().getDeclaredField("url");
+        var url = controller.getClass().getDeclaredField("url");
         ReflectionUtils.makeAccessible(url);
         url.set(controller, wm.getRuntimeInfo().getHttpBaseUrl() + "/hello");
 
